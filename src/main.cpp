@@ -18,6 +18,13 @@ struct FAILED_TO_PARSE_PARAMETERS
     FAILED_TO_PARSE_PARAMETERS(std::string error): error(error){}
 };
 
+/**
+ * @brief Return the string associated with a code
+ * 
+ * @param vals vector of strings
+ * @param number code to be searched
+ * @return std::string 
+ */
 std::string get_string(std::vector< std::pair<unsigned int, std::string> > vals, int number){
     if(number == 0){
         return "";
@@ -26,6 +33,13 @@ std::string get_string(std::vector< std::pair<unsigned int, std::string> > vals,
     }
 }
 
+/**
+ * @brief Encode the given file a compressed one
+ * 
+ * @param in_file Name of the file that will be encoded
+ * @param out_file Name of the file where the compression will be stored
+ * @return std::string 
+ */
 std::string encode(std::string in_file, std::string out_file){
     std::ifstream ifile(in_file, std::ios::binary);
     std::vector< std::pair<unsigned int, char> > encoded_text;
@@ -64,6 +78,13 @@ std::string encode(std::string in_file, std::string out_file){
     return out_file;
 }
 
+/**
+ * @brief Decompress the given file
+ * 
+ * @param in_file Name of the compressed file
+ * @param out_file Name of the file where the content will be decompressed to
+ * @return std::string 
+ */
 std::string decode(std::string in_file, std::string out_file){
     std::ifstream ifile(in_file, std::ios::binary);
     std::ofstream ofile(out_file, std::ios::out | std::ios::binary);
