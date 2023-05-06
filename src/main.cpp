@@ -34,6 +34,54 @@ std::string get_string(std::vector< std::pair<unsigned int, std::string> > vals,
 }
 
 /**
+ * @brief Get the number of bytes necessary to respresent a certain integer
+ * 
+ * @return char 1, 2, 3 or 4 bytes
+ */
+char get_num_bytes(){
+    if (Node::getCounter() > (1 << 3*BYTESIZE)) return 4;
+    else if (Node::getCounter() > (1 << 2*BYTESIZE)) return 3;
+    else if (Node::getCounter() > (1 << BYTESIZE)) return 2;
+    else return 1;
+}
+
+/**
+ * @brief Write the 'num_bytes' least signifficant bytes of an integer into the given file
+ * 
+ * @param num The number to be written
+ * @param num_bytes The number of bytes to be used
+ * @param ofile The file where it will be written
+ */
+void write_bytes(const unsigned int num, const char num_bytes, std::ofstream& ofile){
+    char bytes[4];
+    bytes[3] = (num >> 3*BYTESIZE) & 0xFF;
+    bytes[2] = (num >> 2*BYTESIZE) & 0xFF;
+    bytes[1] = (num >> 1*BYTESIZE) & 0xFF;
+    bytes[0] = num & 0xFF;
+
+    for(int i=0; i < num_bytes; i++){
+        ofile.write(&bytes[i],sizeof(bytes[i]));
+    }
+}
+
+/**
+ * @brief Read a certain number of bytes and convert it into an unsigned integer
+ * 
+ * @param num_bytes Number of bytes to be read
+ * @param ifile Where to read from
+ * @return unsigned int The integer generated
+ */
+unsigned int read_bytes(const char num_bytes, std::ifstream& ifile){
+    char bytes[4] = {0};
+    unsigned int number = 0;
+    for(int i=0; i < num_bytes; i++){
+        ifile.get(bytes[i]);
+        number |= (bytes[i] & 0xFF) << i*BYTESIZE;
+    }
+    return number;
+}
+
+/**
  * @brief Encode the given file a compressed one
  * 
  * @param in_file Name of the file that will be encoded
@@ -64,12 +112,14 @@ std::string encode(std::string in_file, std::string out_file){
     std::ofstream ofile(out_file, std::ios::out | std::ios::binary);
 
     if(ofile.is_open()){
+        char num_bytes = get_num_bytes();
+        ofile.write(&num_bytes, sizeof(num_bytes));
         for(unsigned int i=0; i < encoded_text.size(); i++){
-            ofile.write(reinterpret_cast<const char*>(&encoded_text[i].first), sizeof(encoded_text[i].first));
+            write_bytes(encoded_text[i].first, num_bytes, ofile);
             ofile.write(reinterpret_cast<const char*>(&encoded_text[i].second), sizeof(encoded_text[i].second));
         }
         unsigned int last = current->getCode();
-        ofile.write(reinterpret_cast<const char*>(&last), sizeof(last));
+        write_bytes(last, num_bytes, ofile);
         ofile.close();
     } else {
         throw FAILED_TO_OPEN_FILE(out_file);
@@ -92,9 +142,10 @@ std::string decode(std::string in_file, std::string out_file){
         std::vector<std::string> vals;
         vals.push_back("");
         char c;
+        char num_bytes;
+        ifile.get(num_bytes);
         while(true){
-            unsigned int number = 0;
-            ifile.read(reinterpret_cast<char*>(&number), sizeof(number));
+            unsigned int number = read_bytes(num_bytes, ifile);
 
             std::string prefix = vals[number];
             ofile.write(prefix.c_str(), prefix.size());
