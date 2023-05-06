@@ -116,7 +116,7 @@ std::string encode(std::string in_file, std::string out_file){
         ofile.write(&num_bytes, sizeof(num_bytes));
         for(unsigned int i=0; i < encoded_text.size(); i++){
             write_bytes(encoded_text[i].first, num_bytes, ofile);
-            ofile.write(reinterpret_cast<const char*>(&encoded_text[i].second), sizeof(encoded_text[i].second));
+            ofile.write(&encoded_text[i].second, sizeof(encoded_text[i].second));
         }
         unsigned int last = current->getCode();
         write_bytes(last, num_bytes, ofile);
@@ -154,7 +154,7 @@ std::string decode(std::string in_file, std::string out_file){
                 break;
             } else {
                 vals.push_back(vals[number]+c);
-                ofile.write(reinterpret_cast<const char*>(&c), sizeof(c));
+                ofile.write(&c, sizeof(c));
             }
         }
     } else if (!ifile.is_open()){
